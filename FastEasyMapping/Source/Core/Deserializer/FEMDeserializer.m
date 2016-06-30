@@ -14,10 +14,10 @@
 
 @implementation FEMDeserializer {
     struct {
-        BOOL willMapObject: 1;
-        BOOL didMapObject: 1;
-        BOOL willMapCollection: 1;
-        BOOL didMapCollection: 1;
+        unsigned int willMapObject: 1;
+        unsigned int didMapObject: 1;
+        unsigned int willMapCollection: 1;
+        unsigned int didMapCollection: 1;
     } _delegateFlags;
 }
 

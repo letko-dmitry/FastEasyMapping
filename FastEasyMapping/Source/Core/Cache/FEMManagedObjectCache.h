@@ -6,7 +6,7 @@
 
 @interface FEMManagedObjectCache : NSObject
 
-@property (nonatomic, strong, readonly) NSManagedObjectContext *context;
+@property (nonatomic, readonly) NSManagedObjectContext *context;
 
 - (instancetype)initWithMapping:(FEMMapping *)mapping representation:(id)representation  context:(NSManagedObjectContext *)context;
 

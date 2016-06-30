@@ -56,9 +56,11 @@ NSDictionary *FEMRepresentationCollectPresentedPrimaryKeys(id representation, FE
         NSCParameterAssert(object.entityName != nil);
     });
 
-    NSMutableDictionary *output = [[NSMutableDictionary alloc] init];
-    for (NSString *name in FEMMappingCollectUsedEntityNames(mapping)) {
-        output[name] = [[NSMutableSet alloc] init];
+    NSSet<NSString *> *entityNames = FEMMappingCollectUsedEntityNames(mapping);
+    NSMutableDictionary *output = [[NSMutableDictionary alloc] initWithCapacity:entityNames.count];
+    
+    for (NSString *name in entityNames) {
+        output[name] = [NSMutableSet new];
     }
 
     id root = FEMRepresentationRootForKeyPath(representation, mapping.rootPath);

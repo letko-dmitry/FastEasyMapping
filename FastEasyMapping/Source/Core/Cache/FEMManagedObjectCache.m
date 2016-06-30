@@ -10,8 +10,8 @@
 @implementation FEMManagedObjectCache {
 	NSManagedObjectContext *_context;
 
-	NSDictionary *_lookupKeysMap;
-	NSMutableDictionary *_lookupObjectsMap;
+	NSDictionary<NSString *, NSSet<id> *> *_lookupKeysMap;
+	NSMutableDictionary<NSString *, NSMutableDictionary<id, __kindof NSManagedObject *> *> *_lookupObjectsMap;
 }
 
 #pragma mark - Init
@@ -24,10 +24,12 @@
 
 	self = [self init];
 	if (self) {
+        NSDictionary<NSString *, NSSet<id> *> *primaryKeys = FEMRepresentationCollectPresentedPrimaryKeys(representation, mapping);
+        
 		_context = context;
-
-		_lookupKeysMap = FEMRepresentationCollectPresentedPrimaryKeys(representation, mapping);
-		_lookupObjectsMap = [NSMutableDictionary new];
+        
+		_lookupKeysMap = [primaryKeys copy];
+		_lookupObjectsMap = [[NSMutableDictionary alloc] initWithCapacity:primaryKeys.count];
 	}
 
 	return self;
@@ -35,28 +37,38 @@
 
 #pragma mark - Inspection
 
-- (NSMutableDictionary *)fetchExistingObjectsForMapping:(FEMMapping *)mapping {
-	NSSet *lookupValues = _lookupKeysMap[mapping.entityName];
-	if (lookupValues.count == 0) return [NSMutableDictionary dictionary];
+- (NSMutableDictionary<id, __kindof NSManagedObject *> *)fetchExistingObjectsForMapping:(FEMMapping *)mapping {
+	NSSet<id> *lookupValues = _lookupKeysMap[mapping.entityName];
+	if (lookupValues.count == 0) return nil;
 
+    NSExpression *leftExpression = [NSExpression expressionForKeyPath:mapping.primaryKey];
+    NSExpression *rightExpression = [NSExpression expressionForConstantValue:lookupValues];
+    NSPredicate *predicate = [[NSComparisonPredicate alloc] initWithLeftExpression: leftExpression
+                                                                   rightExpression: rightExpression
+                                                                          modifier: NSAllPredicateModifier
+                                                                              type: NSInPredicateOperatorType
+                                                                           options: NSNormalizedPredicateOption];
+    
 	NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:mapping.entityName];
-	NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K IN %@", mapping.primaryKey, lookupValues];
-	[fetchRequest setPredicate:predicate];
-	[fetchRequest setFetchLimit:lookupValues.count];
+    fetchRequest.predicate = predicate;
+    fetchRequest.fetchLimit = lookupValues.count;
 
-	NSMutableDictionary *output = [NSMutableDictionary new];
-	NSArray *existingObjects = [_context executeFetchRequest:fetchRequest error:NULL];
-	for (NSManagedObject *object in existingObjects) {
-		output[[object valueForKey:mapping.primaryKey]] = object;
-	}
-
-	return output;
+	NSArray<__kindof NSManagedObject *> *existingObjects = [_context executeFetchRequest:fetchRequest error:nil];
+    NSArray<id> *primaryValues = [existingObjects valueForKey:mapping.primaryKey];
+    
+    return [[NSMutableDictionary alloc] initWithObjects: existingObjects
+                                                forKeys: primaryValues];
 }
 
-- (NSMutableDictionary *)cachedObjectsForMapping:(FEMMapping *)mapping {
-	NSMutableDictionary *entityObjectsMap = _lookupObjectsMap[mapping.entityName];
+- (NSMutableDictionary<id, __kindof NSManagedObject *> *)cachedObjectsForMapping:(FEMMapping *)mapping {
+	NSMutableDictionary<id, __kindof NSManagedObject *> *entityObjectsMap = _lookupObjectsMap[mapping.entityName];
 	if (!entityObjectsMap) {
 		entityObjectsMap = [self fetchExistingObjectsForMapping:mapping];
+        
+        if (entityObjectsMap == nil) {
+            entityObjectsMap = [NSMutableDictionary new];
+        }
+        
 		_lookupObjectsMap[mapping.entityName] = entityObjectsMap;
 	}
 
