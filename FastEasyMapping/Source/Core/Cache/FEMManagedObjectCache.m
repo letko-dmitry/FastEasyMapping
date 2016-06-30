@@ -45,7 +45,7 @@
     NSExpression *rightExpression = [NSExpression expressionForConstantValue:lookupValues];
     NSPredicate *predicate = [[NSComparisonPredicate alloc] initWithLeftExpression: leftExpression
                                                                    rightExpression: rightExpression
-                                                                          modifier: NSAllPredicateModifier
+                                                                          modifier: NSDirectPredicateModifier
                                                                               type: NSInPredicateOperatorType
                                                                            options: NSNormalizedPredicateOption];
     
