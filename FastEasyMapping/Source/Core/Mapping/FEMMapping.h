@@ -6,10 +6,13 @@
 #import "FEMRelationship.h"
 
 @interface FEMMapping : NSObject {
-    @protected
-	NSMutableDictionary *_attributeMap;
-	NSMutableDictionary *_relationshipMap;
+@protected
+    NSMutableDictionary<NSString *, FEMAttribute *> *_attributeMap;
+    NSMutableDictionary<NSString *, FEMRelationship *> *_relationshipMap;
 }
+
+@property (nonatomic, readonly, nullable) NSDictionary<NSString *, FEMAttribute *> *attributeMap;
+@property (nonatomic, readonly, nullable) NSDictionary<NSString *, FEMRelationship *> *relationshipMap;
 
 - (nonnull instancetype)init __attribute__((unavailable("use -[FEMMapping initWithObjectClass:] or -[FEMMapping initWithEntityName:] insted")));
 + (nonnull instancetype)new __attribute__((unavailable("use -[FEMMapping initWithObjectClass:] or -[FEMMapping initWithEntityName:] insted")));

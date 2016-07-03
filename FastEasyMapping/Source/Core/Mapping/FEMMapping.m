@@ -13,10 +13,10 @@
     if (self) {
         _attributeMap = [NSMutableDictionary new];
         _relationshipMap = [NSMutableDictionary new];
-
+        
         _objectClass = objectClass;
     }
-
+    
     return self;
 }
 
@@ -34,10 +34,10 @@
     if (self) {
         _attributeMap = [NSMutableDictionary new];
         _relationshipMap = [NSMutableDictionary new];
-
+        
         _entityName = [entityName copy];
     }
-
+    
     return self;
 }
 
@@ -53,21 +53,21 @@
 #pragma mark - Attribute Mapping
 
 - (void)addPropertyMapping:(id<FEMProperty>)propertyMapping toMap:(NSMutableDictionary *)map {
-	NSParameterAssert(propertyMapping);
-	NSAssert(
-		propertyMapping.property.length > 0,
-		@"It's illegal to add mapping without specified property:%@",
-		propertyMapping
-	);
-
+    NSParameterAssert(propertyMapping);
+    NSAssert(
+             propertyMapping.property.length > 0,
+             @"It's illegal to add mapping without specified property:%@",
+             propertyMapping
+             );
+    
 #ifdef DEBUG
-	FEMAttribute *existingMapping = map[propertyMapping.property];
-	if (existingMapping) {
-		NSLog(@"%@ replacing %@ with %@", NSStringFromClass(self.class), existingMapping, propertyMapping);
-	}
+    FEMAttribute *existingMapping = map[propertyMapping.property];
+    if (existingMapping) {
+        NSLog(@"%@ replacing %@ with %@", NSStringFromClass(self.class), existingMapping, propertyMapping);
+    }
 #endif
-
-	map[propertyMapping.property] = propertyMapping;
+    
+    map[propertyMapping.property] = propertyMapping;
 }
 
 - (void)addAttribute:(FEMAttribute *)attribute {
@@ -75,7 +75,7 @@
 }
 
 - (FEMAttribute *)attributeForProperty:(NSString *)property {
-	return _attributeMap[property];
+    return _attributeMap[property];
 }
 
 #pragma mark - Relationship Mapping
@@ -85,17 +85,25 @@
 }
 
 - (FEMRelationship *)relationshipForProperty:(NSString *)property {
-	return _relationshipMap[property];
+    return _relationshipMap[property];
 }
 
 #pragma mark - Properties
 
+- (NSDictionary<NSString *,FEMAttribute *> *)attributeMap {
+    return (_attributeMap.count ? [_attributeMap copy] : nil);
+}
+
 - (NSArray *)attributes {
-	return [_attributeMap allValues];
+    return [_attributeMap allValues];
+}
+
+- (NSDictionary<NSString *,FEMRelationship *> *)relationshipMap {
+    return (_relationshipMap.count ? [_relationshipMap copy] : nil);
 }
 
 - (NSArray *)relationships {
-	return [_relationshipMap allValues];
+    return [_relationshipMap allValues];
 }
 
 #pragma mark -
@@ -108,24 +116,24 @@
 
 - (NSString *)description {
     NSMutableString *description = [NSMutableString stringWithFormat:
-        @"<%@ %p>\n<%%@> {\nrootPath:%@\n",
-        NSStringFromClass(self.class),
-        (__bridge void *) self,
-        self.rootPath
-    ];
-
+                                    @"<%@ %p>\n<%%@> {\nrootPath:%@\n",
+                                    NSStringFromClass(self.class),
+                                    (__bridge void *) self,
+                                    self.rootPath
+                                    ];
+    
     [description appendString:@"attributes {\n"];
     for (FEMAttribute *mapping in self.attributes) {
         [description appendFormat:@"\t(%@),\n", [mapping description]];
     }
     [description appendString:@"}\n"];
-
+    
     [description appendString:@"relationships {\n"];
     for (FEMRelationship *relationshipMapping in self.relationships) {
         [description appendFormat:@"\t(%@),", [relationshipMapping description]];
     }
     [description appendFormat:@"}\n"];
-
+    
     return description;
 }
 
@@ -134,15 +142,15 @@
 @implementation FEMMapping (Shortcut)
 
 - (void)addAttributesFromDictionary:(NSDictionary *)attributesToKeyPath {
-	[attributesToKeyPath enumerateKeysAndObjectsUsingBlock:^(id attribute, id keyPath, BOOL *stop) {
+    [attributesToKeyPath enumerateKeysAndObjectsUsingBlock:^(id attribute, id keyPath, BOOL *stop) {
         [self addAttribute:[FEMAttribute mappingOfProperty:attribute toKeyPath:keyPath]];
-	}];
+    }];
 }
 
 - (void)addAttributesFromArray:(NSArray *)attributes {
-	for (NSString *attribute in attributes) {
+    for (NSString *attribute in attributes) {
         [self addAttribute:[FEMAttribute mappingOfProperty:attribute toKeyPath:attribute]];
-	}
+    }
 }
 
 - (void)addAttributeWithProperty:(NSString *)property keyPath:(NSString *)keyPath {
